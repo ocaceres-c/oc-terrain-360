@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es-CL">
 <head>
+<meta name="oc-terrain-version" content="v47-menu-hard-repair" />
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>OC Terrain 360 · PWA Seguro v45</title>
@@ -3024,50 +3025,12 @@ function renderReportClientClosingOC360(type){
   return `<div class="report-signature"><b>Informe generado por OC Terrain 360.</b><br>Este análisis se basa en datos de inspección cargados en terreno. Las conclusiones deben complementarse con revisión física, condición de ruta, carga real por eje y pauta de mantenimiento del cliente.</div>`;
 }
 function exportReportHtmlOC360(){
+  if(typeof window.exportReportHtmlOC360==='function' && window.exportReportHtmlOC360.name!=='exportReportHtmlOC360'){return window.exportReportHtmlOC360();}
   const out=document.getElementById('reportOutput');
-  if(!out||!out.innerHTML.trim()){toast('No hay reporte para exportar.');return;}
-  const name='OC_Terrain_360_reporte_cliente_'+new Date().toISOString().slice(0,10)+'.html';
-  const content=`<!DOCTYPE html><html lang="es-CL"><head><meta charset="UTF-8"><title>${name}</title><style>body{font-family:Segoe UI,Arial,sans-serif;color:#102033;margin:24px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #d8e0ea;padding:8px;text-align:left;vertical-align:top}th{background:#f8fafc}.muted{color:#667085}.report-client-cover,.report-client-box{border:1px solid #d8e0ea;border-radius:14px;padding:14px;margin:12px 0}.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.meta div{border:1px solid #d8e0ea;border-radius:10px;padding:8px}.report-score{display:flex;gap:8px;flex-wrap:wrap}.score-card{border:1px solid #d8e0ea;border-radius:10px;padding:8px;min-width:120px}.report-critical{border-left:6px solid #b42318;background:#fff1f3;padding:10px}.report-risk{border-left:6px solid #b54708;background:#fffaeb;padding:10px}.report-ok{border-left:6px solid #027a48;background:#ecfdf3;padding:10px}.pill{border-radius:999px;padding:4px 8px;background:#f2f4f7;font-weight:700}.notice{background:#fffaeb;border:1px solid #f6d08d;border-radius:12px;padding:10px}.report-diagnosis-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.report-diagnosis-card{border:1px solid #d8e0ea;border-radius:12px;padding:10px}</style>
-<!-- OC Terrain 360 · PWA seguro -->
-<meta name="theme-color" content="#0f2238" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="OC Terrain 360" />
-<meta name="referrer" content="no-referrer" />
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="apple-touch-icon" href="icons/icon-180.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-<style>
-@media all {
-  .pwa-install-note{display:none}
-}
-@media print {
-  .pwa-install-note,.installPwaBtn,#pwaInstallBox{display:none!important}
-}
-</style>
-</head><body>${out.innerHTML}
-<script>
-(function(){
-  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  if('serviceWorker' in navigator && isSecure){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(){ /* No bloquear la app si SW falla */ });
-    });
-  }
-  window.addEventListener('load', function(){
-    const box=document.getElementById('pwaInstallBox');
-    const isStandalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-    if(box && isiOS && !isStandalone){
-      setTimeout(function(){box.style.display='block';},1200);
-    }
-  });
-})();
-</script>
-
-</body></html>`;
-  const blob=new Blob([content],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); toast('Reporte HTML exportado.');
+  if(!out||!out.innerHTML.trim()){ if(typeof toast==='function')toast('No hay reporte para exportar.'); return; }
+  const html='<!DOCTYPE html><html lang="es-CL"><head><meta charset="UTF-8"><title>Informe OC Terrain 360</title></head><body>'+out.innerHTML+'</body></html>';
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='Informe_OC_Terrain_360.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),500);
 }
 
 </script>
@@ -4147,162 +4110,6 @@ const FLETE_TARIFAS={"cityColumn":{"ALTO HOSPICIO":23,"POZO ALMONTE":24,"PUERTO 
 
 
 <script>
-/* FUSION 2 v41 - Reporte ejecutivo cliente compacto y sin ruido de sistema */
-(function(){
-  function safeText(v){ return (typeof esc==='function') ? esc(v||'') : String(v||'').replace(/[&<>"']/g, m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-  function fmtDateCL(v){ if(!v) return 'Actual'; const s=String(v); if(/^\d{4}-\d{2}-\d{2}$/.test(s)){ const [y,m,d]=s.split('-'); return `${d}-${m}-${y}`; } return s; }
-  function currentReportRowsV38(){ const rows=(typeof getReportFilteredInspectionsOC360==='function')?getReportFilteredInspectionsOC360():[]; return rows.map(i=>{ const k=(typeof analyseInspectionKnowledgeOC360==='function')?analyseInspectionKnowledgeOC360(i):{level:'OK',alerts:[],actions:[]}; return Object.assign({},i,{_k:k,_kmMm:(typeof reportKmPerMmOC360==='function')?reportKmPerMmOC360(i):0,_costKm:(typeof reportCostKmOC360==='function')?reportCostKmOC360(i):0}); }); }
-  function selectedLabel(id, fallback){ const el=document.getElementById(id); if(!el) return fallback||''; return el.selectedOptions && el.selectedOptions[0] ? el.selectedOptions[0].textContent : (el.value||fallback||''); }
-  function objectiveText(){ return selectedLabel('reportObjective','Decisión técnica/comercial'); }
-  function typeText(){ return selectedLabel('reportType','Informe técnico'); }
-  function clientText(){ return (typeof reportClientSelectedNameOC360==='function')?reportClientSelectedNameOC360():'Todos los clientes'; }
-  function vehicleText(){ return (typeof reportVehicleSelectedNameOC360==='function')?reportVehicleSelectedNameOC360():'Todos los equipos'; }
-  function money(n){ return (typeof moneyOC360==='function')?moneyOC360(n):('$'+Math.round(Number(n)||0).toLocaleString('es-CL')); }
-  function minDepth(i){ return (typeof reportMinDepthOC360==='function')?reportMinDepthOC360(i):0; }
-  function impactText(c){ return (typeof reportImpactTextOC360==='function')?reportImpactTextOC360(c):'Menor vida útil o costo oculto por operación.'; }
-  function decisionText(c){ return (typeof reportDecisionByCauseOC360==='function')?reportDecisionByCauseOC360(c):'Mantener seguimiento y corregir causa antes de recomprar.'; }
-  function classify(a){ return (typeof classifyCauseOC360==='function')?classifyCauseOC360(a):'Seguimiento técnico'; }
-  function stats(rows){ const critical=rows.filter(r=>r._k.level==='Crítico').length; const attention=rows.filter(r=>r._k.level==='Atención').length; const ok=rows.length-critical-attention; const km=rows.map(r=>r._kmMm).filter(n=>n>0); const ck=rows.map(r=>r._costKm).filter(n=>n>0); const avgKm=km.length?km.reduce((a,b)=>a+b,0)/km.length:0; const avgCost=ck.length?ck.reduce((a,b)=>a+b,0)/ck.length:0; const best=rows.filter(r=>r._kmMm>0).sort((a,b)=>b._kmMm-a._kmMm)[0]; const worst=rows.filter(r=>r._kmMm>0).sort((a,b)=>a._kmMm-b._kmMm)[0]; return {critical,attention,ok,avgKm,avgCost,best,worst}; }
-  function issueGroups(rows){ const map={}; rows.forEach(r=>{(r._k.alerts||[]).forEach(a=>{const c=classify(a); if(!map[c])map[c]={count:0,critical:0,examples:[],vehicles:new Set(),actions:new Set()}; map[c].count++; if(r._k.level==='Crítico')map[c].critical++; if(map[c].examples.length<3)map[c].examples.push(a); map[c].vehicles.add((typeof vehicleName==='function')?vehicleName(r.vehicleId):(r.vehicleId||'')); (r._k.actions||[]).forEach(x=>map[c].actions.add(x));});}); return Object.entries(map).sort((a,b)=>b[1].count-a[1].count); }
-  function comparisonRows(rows){ const groups={}; rows.forEach(r=>{const key=`${r.brand||'Marca s/d'} · ${r.material||'Sin material'}`; (groups[key]=groups[key]||[]).push(r);}); return Object.entries(groups).map(([k,arr])=>{ const km=arr.map(r=>r._kmMm).filter(n=>n>0); const ck=arr.map(r=>r._costKm).filter(n=>n>0); return {k,count:arr.length,km:km.length?km.reduce((a,b)=>a+b,0)/km.length:0,cost:ck.length?ck.reduce((a,b)=>a+b,0)/ck.length:0,alerts:arr.filter(r=>r._k.level!=='OK').length,critical:arr.filter(r=>r._k.level==='Crítico').length}; }).sort((a,b)=>(b.km||0)-(a.km||0)); }
-  function executiveMessage(rows, st){ if(st.critical>0) return `La evaluación muestra ${st.critical} condición(es) crítica(s). Antes de decidir recompra o cambio de marca, se recomienda corregir la causa operacional para evitar repetir la pérdida.`; if(st.attention>0) return `La evaluación muestra ${st.attention} condición(es) en seguimiento. Hay oportunidad de mejorar rendimiento controlando presión, alineación, balanceo, aplicación y frecuencia de inspección.`; return 'Con la información registrada no se observan condiciones críticas. Se recomienda mantener control periódico para confirmar rendimiento real por marca, posición y aplicación.'; }
-  function reportSubject(type, client, vehicle){ const base=type.includes('Comparativo')?'Comparativo técnico de rendimiento y costo por km':type.includes('Pérdidas')?'Informe de pérdidas operacionales en neumáticos':'Informe ejecutivo de inspección de neumáticos'; return `${base} · ${client}${vehicle&&vehicle!=='Todos los equipos'?' · '+vehicle:''}`; }
-  function buildExecutiveReportHTML(rows){
-    const st=stats(rows), type=typeText(), client=clientText(), vehicle=vehicleText();
-    const from=fmtDateCL(document.getElementById('reportFrom')?.value||'Inicio');
-    const to=fmtDateCL(document.getElementById('reportTo')?.value||'Actual');
-    const groups=issueGroups(rows), comp=comparisonRows(rows);
-    const typeVal=document.getElementById('reportType')?.value||'cliente';
-    const today=(typeof reportTodayOC360==='function')?reportTodayOC360():new Date().toLocaleDateString('es-CL');
-    const rowsDetail=rows.slice(0,typeVal==='inspeccion'?1:10);
-    const materialCount=[...new Set(rows.map(r=>r.material).filter(Boolean))].length;
-    const bestTxt=st.best?`${safeText(st.best.brand||'Marca s/d')} ${safeText(st.best.material||'')} · ${Math.round(st.best._kmMm).toLocaleString('es-CL')} km/mm`:'Sin dato suficiente';
-    const worstTxt=(st.worst && st.best && st.worst!==st.best)?`${safeText(st.worst.brand||'Marca s/d')} ${safeText(st.worst.material||'')} · ${Math.round(st.worst._kmMm).toLocaleString('es-CL')} km/mm`:'Sin comparación suficiente';
-    const mainClass=st.critical?'report-email-alert':st.attention?'report-email-warn':'report-email-ok';
-    const mainConclusion=executiveMessage(rows,st);
-    const topIssues=groups.slice(0,3).map(([k,v])=>`${k}: ${v.count} caso(s)`).join(' · ') || 'Sin patrón repetitivo detectado';
-    const nextAction=st.critical?'Corregir primero las causas críticas antes de recomprar o cambiar marca.':st.attention?'Ajustar mantenimiento y seguir midiendo para confirmar mejora.':'Mantener control periódico y usar rendimiento/costo por km para próximas compras.';
-    const actionByCause=(cause)=>{
-      const c=String(cause||'').toLowerCase();
-      if(c.includes('presión')||c.includes('sobrecarga')) return 'Regular presión en frío, revisar fuga/válvula y validar carga real por eje.';
-      if(c.includes('alineación')||c.includes('geometría')) return 'Revisar alineación, convergencia/camber y condición mecánica antes de instalar neumático nuevo.';
-      if(c.includes('balanceo')||c.includes('suspensión')) return 'Balancear conjunto, revisar suspensión, llanta y amortiguación si existe vibración o desgaste por saltos.';
-      if(c.includes('aplicación')) return 'Validar ruta, carga, velocidad, faena y diseño de neumático correcto para la operación.';
-      if(c.includes('daño')) return 'Revisar operación, impactos/cortes, condición de ruta y hábito de conducción.';
-      if(c.includes('vida útil')) return 'Planificar retiro controlado y comparar rendimiento final antes de recomprar.';
-      return decisionText(cause);
-    };
-    const keyActions=[...new Set(groups.slice(0,4).map(([k])=>actionByCause(k)))];
-    const showComparison=(typeVal==='comparativo'||comp.length>1);
-
-    return `<div class="report-email">
-      <div class="report-email-top">
-        <div>
-          <h2>Informe ejecutivo técnico-comercial</h2>
-          <div class="sub"><b>Cliente:</b> ${safeText(client)}${vehicle&&vehicle!=='Todos los equipos'?' · <b>Equipo:</b> '+safeText(vehicle):''} · <b>Fecha:</b> ${safeText(today)}</div>
-        </div>
-        <div><span class="report-email-pill">OC Terrain 360</span></div>
-      </div>
-
-      <div class="report-email-section compact">
-        <h3>1. Resumen ejecutivo para decisión</h3>
-        <div class="${mainClass}"><b>Conclusión:</b> ${safeText(mainConclusion)}</div>
-        <div class="report-email-summary compact">
-          <div><b>${st.critical}</b><span>Críticos</span></div>
-          <div><b>${st.attention}</b><span>Seguimiento</span></div>
-          <div><b>${st.avgKm?Math.round(st.avgKm).toLocaleString('es-CL'):'—'}</b><span>Km/mm prom.</span></div>
-          <div><b>${st.avgCost?money(st.avgCost):'—'}</b><span>Costo/km est.</span></div>
-          <div><b>${rows.length}</b><span>Inspecciones</span></div>
-        </div>
-        <div class="report-email-key">
-          <div><b>Hallazgo principal:</b><br>${safeText(topIssues)}.</div>
-          <div><b>Acción prioritaria:</b><br>${safeText(nextAction)}</div>
-        </div>
-      </div>
-
-      <div class="report-email-section compact">
-        <h3>2. Lectura técnica y rendimiento</h3>
-        <p><b>Rendimiento observado:</b> mejor ${bestTxt}; menor ${worstTxt}.</p>
-        <p><b>Uso del informe:</b> apoyar decisión de compra/recompra corrigiendo antes las causas que reducen vida útil. <span class="muted">Periodo ${safeText(from)} a ${safeText(to)} · materiales evaluados ${materialCount}.</span></p>
-      </div>
-
-      <div class="report-email-section compact">
-        <h3>3. Causas probables y acción correctiva</h3>
-        ${groups.length?`<div class="table-wrap"><table><thead><tr><th>Causa probable</th><th>Casos</th><th>Equipos</th><th>Impacto para el cliente</th><th>Acción sugerida</th></tr></thead><tbody>${groups.slice(0,5).map(([k,v])=>`<tr><td><b>${safeText(k)}</b><div class="muted small">${safeText(v.examples[0]||'')}</div></td><td>${v.count}</td><td>${safeText([...v.vehicles].filter(Boolean).slice(0,4).join(', ')||'—')}</td><td>${safeText(impactText(k))}</td><td>${safeText(actionByCause(k))}</td></tr>`).join('')}</tbody></table></div>`:'<p>No se detectan patrones repetitivos con la información actual.</p>'}
-      </div>
-
-      ${showComparison?`<div class="report-email-section compact"><h3>4. Comparativo para compra o recompra</h3><p>Lectura por rendimiento real observado, costo estimado por kilómetro y alertas técnicas. La decisión no debe basarse solo en precio unitario.</p><div class="table-wrap"><table><thead><tr><th>Marca / material</th><th>Inspecciones</th><th>Km/mm prom.</th><th>Costo/km est.</th><th>Alertas</th><th>Lectura ejecutiva</th></tr></thead><tbody>${comp.slice(0,8).map((r,idx)=>`<tr><td><b>${safeText(r.k)}</b></td><td>${r.count}</td><td>${r.km?Math.round(r.km).toLocaleString('es-CL'):'—'}</td><td>${r.cost?money(r.cost):'—'}</td><td>${r.alerts}</td><td>${idx===0&&r.km?'Mejor rendimiento observado en la muestra':r.critical?'No recomprar sin corregir causa':'Mantener en seguimiento'}</td></tr>`).join('')}</tbody></table></div></div>`:''}
-
-      <div class="report-email-section compact">
-        <h3>${showComparison?'5':'4'}. Respaldo técnico</h3>
-        <div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Equipo</th><th>Pos.</th><th>Marca/material</th><th>PSI</th><th>MM crítico</th><th>Km/mm</th><th>Diagnóstico</th></tr></thead><tbody>${rowsDetail.map(i=>`<tr><td>${safeText(i.date||'—')}</td><td>${safeText((typeof vehicleName==='function')?vehicleName(i.vehicleId):i.vehicleId||'—')}</td><td>${safeText(i.position||'—')}</td><td><b>${safeText(i.brand||'—')}</b><div class="muted small">${safeText(i.material||'')} ${safeText(i.size||'')}</div></td><td>${safeText(i.psi||'—')}<div class="muted small">Ref. ${safeText(i.recommendedPsi||'—')}</div></td><td>${minDepth(i)||'—'}</td><td>${i._kmMm?Math.round(i._kmMm).toLocaleString('es-CL'):'—'}</td><td><b>${safeText(i._k.level)}</b><div class="muted small">${safeText(i._k.alerts?.[0]||'')}</div></td></tr>`).join('')}</tbody></table></div>
-      </div>
-
-      <div class="report-email-section compact">
-        <h3>${showComparison?'6':'5'}. Recomendación final</h3>
-        <p><b>Prioridad:</b> ${safeText(nextAction)}</p>
-        <ul class="report-email-actions-list">${(keyActions.length?keyActions:['Mantener seguimiento periódico y comparar contra próxima medición.']).map(a=>`<li>${safeText(a)}</li>`).join('')}</ul>
-        <div class="report-email-note"><b>Criterio de compra recomendado:</b> decidir por rendimiento por km/mm, costo por km, falla repetida por posición, presión real, alineación, balanceo, ruta, carga y aplicación.</div>
-      </div>
-
-      <div class="report-email-closing compact"><b>Informe generado con datos de inspección registrados en terreno.</b> Recomendación sujeta a validación operacional del cliente.</div>
-    </div>`;
-  }
-  window.renderReportsOC360=function(){ const out=document.getElementById('reportOutput'); if(!out)return; const rows=currentReportRowsV38(); const statsObj=(typeof reportSummaryStatsOC360==='function')?reportSummaryStatsOC360(rows):{alerts:0,avgKmMm:0,avgCostKm:0,analysed:rows}; if(typeof setReportKpisOC360==='function') setReportKpisOC360(statsObj,rows.length); if(typeof renderReportInternalDiagOC360==='function') renderReportInternalDiagOC360(rows); if(!rows.length){out.innerHTML='<div class="muted">No hay inspecciones para los filtros seleccionados. Para imprimir un informe ejecutivo se requiere al menos una inspección guardada.</div>';return;} out.innerHTML=buildExecutiveReportHTML(rows); };
-  window.printReportOC360=function(){ try{ if(typeof window.renderReportsOC360==='function') window.renderReportsOC360(); const t=document.getElementById('toast'); if(t) t.style.display='none'; document.body.classList.add('print-report-mode'); window.print(); setTimeout(()=>document.body.classList.remove('print-report-mode'),800); } catch(e){ console.error(e); document.body.classList.remove('print-report-mode'); window.print(); } };
-  window.exportReportHtmlOC360=function(){
-    const out=document.getElementById('reportOutput');
-    if(!out||!out.innerHTML.trim()){ if(typeof toast==='function')toast('No hay reporte para exportar.'); return; }
-    const style=`body{font-family:Segoe UI,Arial,sans-serif;color:#102033;margin:18px;background:#fff}.muted{color:#667085}.small{font-size:12px}.table-wrap{overflow:auto;border:1px solid #d8e0ea;border-radius:12px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 8px;border-bottom:1px solid #d8e0ea;text-align:left;vertical-align:top;line-height:1.28}th{background:#f8fafc;text-transform:uppercase;font-size:10px}.report-email{max-width:1000px;margin:0 auto;line-height:1.42}.report-email-top{border-bottom:3px solid #0f766e;padding-bottom:10px;margin-bottom:12px;display:flex;justify-content:space-between;gap:16px}.report-email-top h2{margin:0;font-size:22px}.report-email-top .sub{margin-top:4px;color:#475467;font-size:13px}.report-email-pill{display:inline-flex;border-radius:999px;background:#f0fdfa;border:1px solid #99f6e4;color:#0f4f4a;padding:6px 10px;font-weight:900;font-size:12px}.report-email-section{border:1px solid #d8e0ea;border-radius:14px;padding:12px 14px;margin-top:10px;background:#fff;break-inside:avoid}.report-email-section h3{margin:0 0 6px;font-size:16px}.report-email-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0}.report-email-summary div{border:1px solid #d8e0ea;background:#f8fafc;border-radius:12px;padding:9px 10px;min-height:58px}.report-email-summary b{display:block;font-size:19px}.report-email-summary span{font-size:10.5px;text-transform:uppercase;font-weight:800;color:#667085}.report-email-key{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;margin-top:10px}.report-email-key>div{border:1px dashed #cbd5e1;border-radius:12px;background:#f8fafc;padding:10px;color:#344054}.report-email-alert{border-left:6px solid #b42318;background:#fff1f3;border-radius:12px;padding:10px;color:#912018}.report-email-warn{border-left:6px solid #b54708;background:#fffaeb;border-radius:12px;padding:10px;color:#7a4a00}.report-email-ok{border-left:6px solid #027a48;background:#ecfdf3;border-radius:12px;padding:10px;color:#05603a}.report-email-note{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:12px;padding:10px;color:#475467;margin-top:8px}.report-email-actions-list{margin:6px 0 0 18px;padding:0}.report-email-actions-list li{margin:3px 0}.report-email-closing{margin-top:10px;border-top:1px solid #d8e0ea;padding-top:8px;color:#667085;font-size:11px}@media print{@page{size:A4;margin:12mm}body{margin:0}.report-email{max-width:none}.report-email-section{break-inside:avoid}.table-wrap{overflow:visible}.report-email-summary{grid-template-columns:repeat(5,1fr)}}`;
-    const html='<!DOCTYPE html><html lang="es-CL"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Informe ejecutivo OC Terrain 360</title><style>'+style+'</style>
-<!-- OC Terrain 360 · PWA seguro -->
-<meta name="theme-color" content="#0f2238" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="OC Terrain 360" />
-<meta name="referrer" content="no-referrer" />
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="apple-touch-icon" href="icons/icon-180.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-<style>
-@media all {
-  .pwa-install-note{display:none}
-}
-@media print {
-  .pwa-install-note,.installPwaBtn,#pwaInstallBox{display:none!important}
-}
-</style>
-</head><body>'+out.innerHTML+'
-<script>
-(function(){
-  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  if('serviceWorker' in navigator && isSecure){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(){ /* No bloquear la app si SW falla */ });
-    });
-  }
-  window.addEventListener('load', function(){
-    const box=document.getElementById('pwaInstallBox');
-    const isStandalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-    if(box && isiOS && !isStandalone){
-      setTimeout(function(){box.style.display='block';},1200);
-    }
-  });
-})();
-</script>
-
-</body></html>';
-    const blob=new Blob([html],{type:'text/html;charset=utf-8'}); const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob); a.download='Informe_ejecutivo_OC_Terrain_360_cliente_v41.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),500); if(typeof toast==='function')toast('Informe ejecutivo exportado en HTML.');
-  };
-  window.copyReportOC360=async function(){ const el=document.getElementById('reportOutput'); const text=el?el.innerText.trim():''; if(!text){ if(typeof toast==='function')toast('No hay reporte para copiar.'); return; } try{ await navigator.clipboard.writeText(text); if(typeof toast==='function')toast('Informe ejecutivo copiado al portapapeles.'); } catch(e){ if(typeof toast==='function')toast('No se pudo copiar automáticamente. Selecciona el informe y copia manualmente.'); } };
-})();
-</script>
-
-
-
-<script>
 /* FUSION 2 v43 - Reporte limpio: estado de flota, rendimiento normal vs fallas y costo/km */
 (function(){
   function safeText(v){
@@ -4429,49 +4236,24 @@ const FLETE_TARIFAS={"cityColumn":{"ALTO HOSPICIO":23,"POZO ALMONTE":24,"PUERTO 
     try{window.renderReportsOC360();var t=document.getElementById('toast');if(t)t.style.display='none';document.body.classList.add('print-report-mode');window.print();setTimeout(function(){document.body.classList.remove('print-report-mode');},800);}catch(e){console.error(e);document.body.classList.remove('print-report-mode');window.print();}
   };
   window.exportReportHtmlOC360=function(){
-    var out=document.getElementById('reportOutput'); if(!out||!out.innerHTML.trim()){if(typeof toast==='function')toast('No hay reporte para exportar.');return;}
-    var style=document.querySelector('style')?document.querySelector('style').innerHTML:'';
-    var extra='body{font-family:Segoe UI,Arial,sans-serif;color:#102033;margin:18px;background:#fff}.muted{color:#667085}.small{font-size:12px}.table-wrap{overflow:auto;border:1px solid #d8e0ea;border-radius:12px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 8px;border-bottom:1px solid #d8e0ea;text-align:left;vertical-align:top;line-height:1.28}th{background:#f8fafc;text-transform:uppercase;font-size:10px}.report-email{max-width:1000px;margin:0 auto;line-height:1.42}@media print{@page{size:A4;margin:12mm}body{margin:0}.report-email{max-width:none}.report-email-section{break-inside:avoid}.table-wrap{overflow:visible}}';
-    var html='<!DOCTYPE html><html lang="es-CL"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Informe estado flota OC Terrain 360</title><style>'+style+extra+'</style>
-<!-- OC Terrain 360 · PWA seguro -->
-<meta name="theme-color" content="#0f2238" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-<meta name="apple-mobile-web-app-title" content="OC Terrain 360" />
-<meta name="referrer" content="no-referrer" />
-<link rel="manifest" href="manifest.webmanifest" />
-<link rel="apple-touch-icon" href="icons/icon-180.png" />
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png" />
-<style>
-@media all {
-  .pwa-install-note{display:none}
-}
-@media print {
-  .pwa-install-note,.installPwaBtn,#pwaInstallBox{display:none!important}
-}
-</style>
-</head><body>'+out.innerHTML+'
-<script>
-(function(){
-  const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-  if('serviceWorker' in navigator && isSecure){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('./sw.js').catch(function(){ /* No bloquear la app si SW falla */ });
-    });
-  }
-  window.addEventListener('load', function(){
-    const box=document.getElementById('pwaInstallBox');
-    const isStandalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    const isiOS=/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
-    if(box && isiOS && !isStandalone){
-      setTimeout(function(){box.style.display='block';},1200);
+    var out=document.getElementById('reportOutput');
+    if(!out||!out.innerHTML.trim()){
+      if(typeof toast==='function')toast('No hay reporte para exportar.');
+      return;
     }
-  });
-})();
-</script>
-
-</body></html>';
-    var blob=new Blob([html],{type:'text/html;charset=utf-8'}); var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Informe_estado_flota_OC_Terrain_360_v43.html'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){URL.revokeObjectURL(a.href);},500); if(typeof toast==='function')toast('Informe de estado de flota exportado en HTML.');
+    var baseStyle=document.querySelector('style')?document.querySelector('style').innerHTML:'';
+    var extra='body{font-family:Segoe UI,Arial,sans-serif;color:#102033;margin:18px;background:#fff}.muted{color:#667085}.small{font-size:12px}.table-wrap{overflow:auto;border:1px solid #d8e0ea;border-radius:12px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:7px 8px;border-bottom:1px solid #d8e0ea;text-align:left;vertical-align:top;line-height:1.28}th{background:#f8fafc;text-transform:uppercase;font-size:10px}.report-email{max-width:1000px;margin:0 auto;line-height:1.42}@media print{@page{size:A4;margin:12mm}body{margin:0}.report-email{max-width:none}.report-email-section{break-inside:avoid}.table-wrap{overflow:visible}}';
+    var html='<!DOCTYPE html><html lang="es-CL"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Informe estado flota OC Terrain 360</title><style>'+baseStyle+extra+'</style></head><body>'+out.innerHTML+'</body></html>';
+    var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='Informe_estado_flota_OC_Terrain_360_v46.html';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},500);
+    if(typeof toast==='function')toast('Informe de estado de flota exportado en HTML.');
   };
   window.copyReportOC360=async function(){var el=document.getElementById('reportOutput');var text=el?el.innerText.trim():'';if(!text){if(typeof toast==='function')toast('No hay reporte para copiar.');return;}try{await navigator.clipboard.writeText(text);if(typeof toast==='function')toast('Informe copiado al portapapeles.');}catch(e){if(typeof toast==='function')toast('No se pudo copiar automáticamente. Selecciona el informe y copia manualmente.');}};
 })();
@@ -4494,6 +4276,33 @@ const FLETE_TARIFAS={"cityColumn":{"ALTO HOSPICIO":23,"POZO ALMONTE":24,"PUERTO 
       setTimeout(function(){box.style.display='block';},1200);
     }
   });
+})();
+</script>
+
+
+<script id="oc360-nav-hard-repair-v47">
+(function(){
+  'use strict';
+  var TITLES={dashboard:'Dashboard',clientes:'Clientes',productos:'Productos técnicos',equipos:'Equipos / flotas',inspecciones:'Inspecciones',flete:'Flete consultivo',cotizaciones:'Cotizaciones',reportes:'Reportes',respaldos:'Respaldos / iCloud',config:'Configuración',modulos:'Módulos conectados'};
+  var HINTS={dashboard:'Vista general de la base estratégica',clientes:'Base de clientes, direcciones y contactos',productos:'Base técnica de productos',equipos:'Control de flotas y equipos',inspecciones:'Inspección por equipo y posición',flete:'Cálculo consultivo Samex',cotizaciones:'Seguimiento comercial',reportes:'Informes ejecutivos para cliente',respaldos:'Exportar, importar y fusionar respaldos',config:'Datos generales del sistema',modulos:'Módulos conectados'};
+  function qs(sel){return document.querySelector(sel)}
+  function qsa(sel){return Array.prototype.slice.call(document.querySelectorAll(sel))}
+  function closeMenu(){var s=qs('#sidebar'), b=qs('#backdrop'); if(s)s.classList.remove('open'); if(b)b.classList.remove('show'); document.body.classList.remove('menu-open');}
+  function openMenu(){var s=qs('#sidebar'), b=qs('#backdrop'); if(s)s.classList.add('open'); if(b)b.classList.add('show'); document.body.classList.add('menu-open');}
+  window.toggleMenu=function(force){var s=qs('#sidebar'); var shouldOpen=(typeof force==='boolean')?force:!(s&&s.classList.contains('open')); if(shouldOpen)openMenu();else closeMenu();};
+  window.go=function(id){
+    id=id||'dashboard'; var target=document.getElementById(id); if(!target){id='dashboard';target=document.getElementById('dashboard');}
+    qsa('.section').forEach(function(sec){sec.classList.remove('active');sec.style.display='none';});
+    if(target){target.classList.add('active');target.style.display='block';}
+    qsa('#nav button[data-view]').forEach(function(btn){btn.classList.toggle('active',btn.getAttribute('data-view')===id);});
+    var t=qs('#topTitle'); if(t)t.textContent=TITLES[id]||id; var h=qs('#topHint'); if(h)h.textContent=HINTS[id]||'';
+    closeMenu(); try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){window.scrollTo(0,0);} return false;
+  };
+  function bindNav(){qsa('#nav button[data-view]').forEach(function(btn){var id=btn.getAttribute('data-view');btn.onclick=function(ev){if(ev)ev.preventDefault();return window.go(id);};}); var hamb=qs('.hamb'); if(hamb){hamb.onclick=function(ev){if(ev)ev.preventDefault();window.toggleMenu();return false;};} var back=qs('#backdrop'); if(back){back.onclick=function(ev){if(ev)ev.preventDefault();closeMenu();return false;};}}
+  function removeRoguePrintedCode(){var bad=['const blob=new Blob','window.copyReportOC360','navigator.clipboard.writeText','Informe_estado_flota_OC_Terrain_360'];function walk(node){for(var i=node.childNodes.length-1;i>=0;i--){var c=node.childNodes[i];if(c.nodeType===3){var text=c.nodeValue||'';if(bad.some(function(x){return text.indexOf(x)>=0;})){c.parentNode.removeChild(c);}}else if(c.nodeType===1&&!/^(SCRIPT|STYLE|TEXTAREA|INPUT)$/i.test(c.tagName)){walk(c);}}} if(document.body)walk(document.body);}
+  document.addEventListener('DOMContentLoaded',function(){removeRoguePrintedCode();bindNav();var active=qs('.section.active');window.go(active?active.id:'dashboard');});
+  document.addEventListener('click',function(ev){var btn=ev.target.closest&&ev.target.closest('#nav button[data-view]');if(btn){ev.preventDefault();window.go(btn.getAttribute('data-view'));}},true);
+  document.addEventListener('keydown',function(ev){if(ev.key==='Escape')closeMenu();});
 })();
 </script>
 
