@@ -1,0 +1,27 @@
+OC Terrain 360 · PWA seguro v45
+
+Objetivo:
+Usar OC Terrain 360 en iPhone como app web instalada, sin exponer datos de clientes ni inspecciones.
+
+Contenido:
+- index.html: aplicación principal.
+- manifest.webmanifest: configuración de app instalable.
+- sw.js: caché offline básico.
+- icons/: íconos para iPhone/tablet.
+
+Seguridad recomendada:
+1. No subas respaldos JSON con datos reales a un hosting público.
+2. Sube solo estos archivos de la app a un hosting HTTPS controlado.
+3. Los datos de clientes, equipos, inspecciones y fletes quedan en IndexedDB del dispositivo.
+4. Exporta respaldos JSON y guárdalos en iCloud Drive privado.
+5. Si usas un hosting público, la app puede verla quien tenga el enlace, pero no verá tus datos locales salvo que también subas respaldos.
+
+Cómo instalar en iPhone:
+1. Publica esta carpeta en un hosting con HTTPS.
+2. Abre el enlace desde Safari en el iPhone.
+3. Toca Compartir.
+4. Toca Agregar a pantalla de inicio.
+5. Abre OC Terrain 360 desde el ícono creado.
+
+Nota:
+En iPhone, los PWA necesitan Safari + HTTPS para funcionar de forma estable. Abrir el HTML directo desde Archivos no es recomendable.
